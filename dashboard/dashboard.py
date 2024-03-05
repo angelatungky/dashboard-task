@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
-
+from babel.numbers import format_currency
 # Read the data
 hour_df = pd.read_csv("data/hour.csv")
 day_df = pd.read_csv("data/day.csv")
