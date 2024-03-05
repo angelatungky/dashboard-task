@@ -2,8 +2,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
-from babel.numbers import format_currency
-
 
 # Read the data
 hour_df = pd.read_csv("data/hour.csv")
@@ -99,3 +97,60 @@ def plot_season_pie_chart():
 plot_weather_bar_chart()
 st.subheader("Bike Rental based on Season")
 plot_season_pie_chart()
+
+# Ensure 'dteday' column is in datetime format
+hour_df['dteday'] = pd.to_datetime(hour_df['dteday'])
+
+rfm_df = hour_df.groupby(by="hr", as_index=False).agg({
+    "dteday": "max",  # mengambil tanggal penyewaan sepeda terakhir
+    "instant": "nunique",  # menghitung jumlah penyewaan sepeda
+    "cnt": "sum"  # menghitung jumlah revenue yang dihasilkan
+})
+
+rfm_df.columns = ["hr", "last_order_date", "frequency", "monetary"]
+
+# menghitung kapan terakhir pelanggan melakukan transaksi (hari)
+rfm_df["last_order_date"] = rfm_df["last_order_date"].dt.date
+recent_date = hour_df["dteday"].dt.date.max()
+rfm_df["recency"] = rfm_df["last_order_date"].apply(lambda x: (recent_date - x).days)
+
+rfm_df.drop("last_order_date", axis=1, inplace=True)
+
+# Define a single color for the RFM bar chart analysis
+rfm_color = '#ABEBC6'
+
+# Sort rfm_df by recency, frequency, and monetary and select top 5
+rfm_df_recency = rfm_df.sort_values(by="recency", ascending=True).head(5)
+rfm_df_frequency = rfm_df.sort_values(by="frequency", ascending=False).head(5)
+rfm_df_monetary = rfm_df.sort_values(by="monetary", ascending=False).head(5)
+
+# Create subplots for RFM analysis
+st.subheader("RFM Analysis: Best Rental Hours")
+fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(30, 6))
+
+# Plot by Recency
+sns.barplot(y="recency", x="hr", data=rfm_df_recency, color=rfm_color, ax=ax[0])
+ax[0].set_ylabel(None)
+ax[0].set_xlabel(None)
+ax[0].set_title("By Recency (days)", loc="center", fontsize=18)
+ax[0].tick_params(axis='x', labelsize=15)
+
+# Plot by Frequency
+sns.barplot(y="frequency", x="hr", data=rfm_df_frequency, color=rfm_color, ax=ax[1])
+ax[1].set_ylabel(None)
+ax[1].set_xlabel(None)
+ax[1].set_title("By Frequency", loc="center", fontsize=18)
+ax[1].tick_params(axis='x', labelsize=15)
+
+# Plot by Monetary
+sns.barplot(y="monetary", x="hr", data=rfm_df_monetary, color=rfm_color, ax=ax[2])
+ax[2].set_ylabel(None)
+ax[2].set_xlabel(None)
+ax[2].set_title("By Monetary", loc="center", fontsize=18)
+ax[2].tick_params(axis='x', labelsize=15)
+
+# Set suptitle
+plt.suptitle("Best Rental Hours Based on RFM Parameters", fontsize=20)
+
+# Show the plot
+st.pyplot(fig)
