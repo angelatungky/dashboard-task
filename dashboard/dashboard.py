@@ -11,7 +11,7 @@ min_date = pd.to_datetime(day_df["dteday"].min())  # Convert min_date to datetim
 max_date = pd.to_datetime(day_df["dteday"].max())  # Convert max_date to datetime object
 
 with st.sidebar:
-    st.image("data/bicycle.jpg", width=300)
+    st.image("https://raw.githubusercontent.com/angelatungky/dashboard-task/main/dashboard/bicycle.jpg", width=300)
     # Mengambil start_date & end_date dari date_input
     start_date, end_date = st.date_input(
         label='Rentang Waktu', min_value=min_date,
